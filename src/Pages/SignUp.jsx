@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Logo from "../assets/logo.svg";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from 'axios'
+import { signUp } from "../Utils/APIs";
+
+
 function SignUp() {
+
+  const navigate = useNavigate()
+
   const [values, setValues] = useState({
     username: "",
     email: "",
@@ -47,14 +54,36 @@ function SignUp() {
       toast.warn("password must be at least 8 characters", toastStyles);
       return false;
     } else{
-      toast.success('🦄 Wow so easy!', toastSuccess );
+      toast.success('Successful!', toastSuccess );
       return true 
     }
   };
 
-  const handleSubmit = (e) => {
+  useEffect(()=>{
+    if(localStorage.getItem('emperor')){
+      navigate('/')
+    }
+  }, [])
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    handleValidation();
+    if(handleValidation()){
+      const {username, email, password, confirmPassword} = values
+      const {data} = await axios.post(signUp, {
+        username,
+        email,
+        password
+      });
+      // Check if error
+      if(data.status === false){
+         toast.error(data.msg, toastStyles)
+      }
+      // Check for success
+      if(data.status === true){
+        localStorage.setItem('emperor', JSON.stringify(data.newUser))
+        navigate('/')
+      }
+    }
   };
   const handleChange = (e) => {
     e.preventDefault();
